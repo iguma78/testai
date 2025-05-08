@@ -82,6 +82,12 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install development dependencies
 pip install -e ".[dev]"
 ```
+#Create a Local Package Index:
+##You can build the package and install it from a local directory:
+### In this package directory
+python setup.py sdist bdist_wheel
+### Then in your other project
+pip install /path/to/this/package/dist/your_package_name-version.tar.gz
 
 ### Running Tests
 
