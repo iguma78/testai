@@ -156,8 +156,8 @@ class TestResultAiCm(unittest.TestCase):
                     self.assertEqual(current_func, mock_create)
                     self.assertIsNot(current_func, mock_create)
                     self.assertIs(current_func.__wrapped__, mock_create)
-                    self.assertTrue(
-                        "result_ai_wrapper" in current_func._self_wrapper.__name__
+                    self.assertIn(
+                        "result_ai_wrapper", current_func._self_wrapper.__name__
                     )
 
                     client = openai.OpenAI(api_key="")

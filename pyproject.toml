@@ -102,8 +102,6 @@ select = [
   "E722",
   # unused arguments
   "ARG",
-  # print statements
-  "T201",
   "T203",
   # import rules
   "TID251",

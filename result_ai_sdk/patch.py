@@ -74,7 +74,9 @@ class FunctionPatcher(BaseModel):
             return
 
         self.original_func = _wrap_func(
-            self.module_name_to_patch, self.func_name_to_patch, wrapper
+            self.module_name_to_patch,
+            self.func_name_to_patch,
+            wrapper,
         )
         self.patched = True
 
@@ -99,6 +101,70 @@ SUPPORTED_MODULES_TO_PATCH = [
 ]
 
 
+def result_ai_wrapper_with_arguments(
+    task_name: str, args_to_report: dict, patcher: FunctionPatcher
+):
+    @wrapt.decorator
+    def result_ai_wrapper(wrapped, _instance, args, kwargs):
+        pre_hook_success = False
+        try:
+            logger.debug(f"Result AI | API call started for task: {task_name}")
+            start_time = time.perf_counter()
+            pre_hook_success = True
+        except Exception:
+            logger.error(
+                f"Result AI | Error in pre hook API call for task {task_name}: {traceback.format_exc()}"
+            )
+
+        response = wrapped(*args, **kwargs)
+
+        if pre_hook_success:
+            try:
+                time_took = time.perf_counter() - start_time
+                logger.debug(
+                    f"Result AI | API call completed in {time_took:.3f}s for task: {task_name}"
+                )
+
+                request_data = {
+                    "llm_call_arguments": inspect.signature(wrapped)
+                    .bind(*args, **kwargs)
+                    .arguments,
+                }
+
+                response_data = {
+                    "success": True,
+                    "response": response,
+                    "latency": time_took,
+                }
+
+                logger.debug(
+                    f"Result AI | Adding result to queue for task: {task_name}"
+                )
+
+                add_to_queue(
+                    {
+                        "user_id": "1897ce6d-5694-41ce-a75d-8ea9e4dc81b4",
+                        "function_patched": str(patcher.func_name_to_patch),
+                        "module_name_to_patch": str(patcher.module_name_to_patch),
+                        "root_module_name": str(patcher.root_module_name),
+                        "timestamp": datetime.datetime.now().isoformat(),
+                        "task_name": task_name,
+                        "user_input_args": args_to_report,
+                        "request_data": request_data,
+                        "response_data": response_data,
+                    }
+                )
+
+            except Exception:
+                logger.error(
+                    f"Result AI | Error in post hook API call for task {task_name}: {traceback.format_exc()}"
+                )
+
+        return response
+
+    return result_ai_wrapper
+
+
 class result_ai:
     """
     A context manager for monitoring OpenAI API calls.
@@ -117,7 +183,8 @@ class result_ai:
         >>> with result_ai_cm("classification_task", model="gpt-4"):
         ...     # Make an OpenAI API call
         ...     response = openai.chat.completions.create(
-        ...         model="gpt-4", messages=[{"role": "user", "content": "Hello, world!"}]
+        ...         model="gpt-4",
+        ...         messages=[{"role": "user", "content": "Hello, world!"}],
         ...     )
         ...     # The API call will be monitored and recorded
     """
@@ -129,68 +196,13 @@ class result_ai:
 
     def __enter__(self):
         for patcher in self.patchers:
-
-            @wrapt.decorator
-            def result_ai_wrapper(wrapped, instance, args, kwargs):
-                pre_hook_success = False
-                try:
-                    logger.debug(
-                        f"Result AI | API call started for task: {self.task_name}"
-                    )
-                    start_time = time.perf_counter()
-                    pre_hook_success = True
-                except Exception:
-                    logger.error(
-                        f"Result AI | Error in pre hook API call for task {self.task_name}: {traceback.format_exc()}"
-                    )
-
-                response = wrapped(*args, **kwargs)
-
-                if pre_hook_success:
-                    try:
-                        time_took = time.perf_counter() - start_time
-                        logger.debug(
-                            f"Result AI | API call completed in {time_took:.3f}s for task: {self.task_name}"
-                        )
-
-                        request_data = {
-                            "llm_call_arguments": inspect.signature(wrapped)
-                            .bind(*args, **kwargs)
-                            .arguments,
-                        }
-
-                        response_data = {
-                            "success": True,
-                            "response": response,
-                            "latency": time_took,
-                        }
-
-                        logger.debug(
-                            f"Result AI | Adding result to queue for task: {self.task_name}"
-                        )
-
-                        add_to_queue(
-                            {
-                                "user_id": "1897ce6d-5694-41ce-a75d-8ea9e4dc81b4",
-                                "function_patched": patcher.func_name_to_patch,
-                                "module_name_to_patch": patcher.module_name_to_patch,
-                                "root_module_name": patcher.root_module_name,
-                                "timestamp": datetime.datetime.now().isoformat(),
-                                "task_name": self.task_name,
-                                "user_input_args": self.input_args_to_report,
-                                "request_data": request_data,
-                                "response_data": response_data,
-                            }
-                        )
-
-                    except Exception:
-                        logger.error(
-                            f"Result AI | Error in post hook API call for task {self.task_name}: {traceback.format_exc()}"
-                        )
-
-                return response
-
-            patcher.patch(wrapper=result_ai_wrapper)
+            patcher.patch(
+                wrapper=result_ai_wrapper_with_arguments(
+                    task_name=self.task_name,
+                    args_to_report=self.input_args_to_report,
+                    patcher=patcher,
+                )
+            )
 
     def __exit__(self, exctype, excinst, exctb):
         for patcher in self.patchers:
