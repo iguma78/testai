@@ -4,7 +4,7 @@ Queue management for the TestAI SDK.
 This module provides queue functionality for batching and processing API requests.
 """
 
-import queue
+import queue as std_queue
 import time
 import requests
 import threading
@@ -12,7 +12,7 @@ import logging
 from typing import Dict, Any
 
 # Configure logging
-logger = logging.getLogger("testai_sdk")
+logger = logging.getLogger("result_ai_sdk.queue")
 handler = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
@@ -20,7 +20,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 # Create a queue for batching requests
-request_queue = queue.Queue()
+request_queue = std_queue.Queue()
 BATCH_SIZE = 1
 CHECK_INTERVAL = 0.01
 API_ENDPOINT = "https://41aqa6x62g.execute-api.us-east-1.amazonaws.com/prompts"
@@ -59,7 +59,7 @@ def queue_worker():
                     except Exception as e:
                         logger.error(f"Error sending batch: {e}")
                     batch = []
-            except queue.Empty:
+            except std_queue.Empty:
                 break
         
         # Sleep for the check interval

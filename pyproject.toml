@@ -15,7 +15,8 @@ authors = [
 dependencies = [
     "openai>=1.0.0",
     "requests>=2.25.0",
-    "wrapt>=1.14.1"
+    "wrapt>=1.14.1",
+    "packaging>=25.0",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",

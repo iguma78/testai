@@ -1332,6 +1332,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "openai" },
+    { name = "packaging" },
     { name = "requests" },
     { name = "wrapt" },
 ]
@@ -1369,6 +1370,7 @@ requires-dist = [
     { name = "isort", marker = "extra == 'dev'" },
     { name = "mypy", marker = "extra == 'dev'" },
     { name = "openai", specifier = ">=1.0.0" },
+    { name = "packaging", specifier = ">=25.0" },
     { name = "pre-commit", marker = "extra == 'dev'" },
     { name = "pytest", marker = "extra == 'dev'" },
     { name = "requests", specifier = ">=2.25.0" },
