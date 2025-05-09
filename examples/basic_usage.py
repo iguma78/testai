@@ -7,7 +7,7 @@ to monitor OpenAI API calls.
 
 import os
 import openai
-from testai_sdk import result_ai_cm
+from result_ai_sdk import result_ai_cm
 
 # Set up OpenAI API key
 # In a real application, you would set this through environment variables

@@ -5,7 +5,7 @@ Unit tests for the TestAI SDK core functionality.
 import unittest
 import unittest.mock as mock
 import openai
-from testai_sdk import result_ai_cm, add_to_queue
+from result_ai_sdk import result_ai_cm, add_to_queue
 
 
 class TestResultAiCm(unittest.TestCase):
