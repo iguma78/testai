@@ -1,9 +1,3 @@
-"""
-Example demonstrating how to use the TestAI SDK to monitor OpenAI API calls.
-
-This example shows how to use the result_ai_cm context manager to monitor
-and record OpenAI API calls.
-"""
 
 import os
 import openai

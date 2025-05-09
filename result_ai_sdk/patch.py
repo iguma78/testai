@@ -8,7 +8,7 @@ import logging
 import openai
 from typing import Any, Dict
 
-from .plugins.openai import monitor_openai_call
+from .plugins.openai_wrapper import monitor_openai_call
 
 logger = logging.getLogger("testai_sdk")
 
