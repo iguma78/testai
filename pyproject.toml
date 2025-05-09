@@ -1,7 +1,7 @@
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
+`
 [project]
 name = "result-ai-sdk"
 version = "0.1.0"
@@ -40,7 +40,6 @@ Issues = "https://github.com/yourusername/testai/issues"
 dev = [
     "pre-commit",
     "pytest",
-    "black",
     "isort",
     "flake8",
     "flake8-docstrings",
@@ -49,11 +48,6 @@ dev = [
     "mypy",
     "types-requests",
 ]
-
-[tool.black]
-line-length = 120
-target-version = ["py38"]
-include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
