@@ -1,11 +1,13 @@
-
 import os
+
 import openai
+
 from result_ai_sdk import result_ai_cm
 
 # Set up OpenAI API key
 # In a real application, you would set this through environment variables
 openai.api_key = os.environ.get("OPENAI_API_KEY", "your-api-key")
+
 
 def main():
     # Example 1: Basic OpenAI API call without monitoring
@@ -14,8 +16,8 @@ def main():
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "Hello, world!"}
-        ]
+            {"role": "user", "content": "Hello, world!"},
+        ],
     )
     print(f"Response: {response.choices[0].message.content}")
     print("=" * 40)
@@ -27,8 +29,8 @@ def main():
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Tell me a joke."}
-            ]
+                {"role": "user", "content": "Tell me a joke."},
+            ],
         )
         print(f"Response: {response.choices[0].message.content}")
     print("=" * 40)
@@ -39,8 +41,8 @@ def main():
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "What's the weather like?"}
-        ]
+            {"role": "user", "content": "What's the weather like?"},
+        ],
     )
     print(f"Response: {response.choices[0].message.content}")
     print("=" * 40)
@@ -52,14 +54,17 @@ def main():
         user_id="test_user",
         environment="development",
         task_type="classification",
-        priority="high"
+        priority="high",
     ):
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Classify this text as positive or negative: 'I love this product!'"}
-            ]
+                {
+                    "role": "user",
+                    "content": "Classify this text as positive or negative: 'I love this product!'",
+                },
+            ],
         )
         print(f"Response: {response.choices[0].message.content}")
     print("=" * 40)

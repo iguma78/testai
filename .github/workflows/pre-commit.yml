@@ -25,4 +25,4 @@ jobs:
         pip install pre-commit
     - name: Run pre-commit
       run: |
-        pre-commit run --all-files 
+        pre-commit run --all-files
