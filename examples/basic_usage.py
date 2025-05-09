@@ -9,7 +9,7 @@ import os
 
 import openai
 
-from result_ai_sdk import result_ai_cm
+from result_ai_sdk import result_ai
 
 # Set up OpenAI API key
 # In a real application, you would set this through environment variables
@@ -33,7 +33,7 @@ print("=" * 40)
 # Example 2: Using the context manager to monitor the API call
 print("Example 2: Using the context manager")
 try:
-    with result_ai_cm("joke_task", category="humor"):
+    with result_ai("joke_task", category="humor"):
         response = openai.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
@@ -51,7 +51,7 @@ print("=" * 40)
 # Example 3: Adding detailed metadata
 print("Example 3: Adding detailed metadata")
 try:
-    with result_ai_cm(
+    with result_ai(
         "classification_task",
         user_id="test_user",
         environment="development",
@@ -80,7 +80,7 @@ print("=" * 40)
 # Example 4: Multiple API calls in the same context
 print("Example 4: Multiple API calls in the same context")
 try:
-    with result_ai_cm("conversation_task", session_id="session123"):
+    with result_ai("conversation_task", session_id="session123"):
         # First message
         response1 = openai.chat.completions.create(
             model="gpt-3.5-turbo",

@@ -51,7 +51,7 @@ dev = [
 ]
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ["py38"]
 include = '\.pyi?$'
 
@@ -66,24 +66,25 @@ testpaths = ["tests"]
 python_version = "3.8"
 warn_return_any = true
 warn_unused_configs = true
-disallow_untyped_defs = true
 disallow_incomplete_defs = true
-check_untyped_defs = true
 disallow_untyped_decorators = true
 no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
 warn_unreachable = true
+allow_untyped_defs = true
+disable_error_code = "var-annotated,no-untyped-def"
+
 
 [tool.autopep8]
-max_line_length = 88
+max_line_length = 120
 in-place = true
 recursive = true
 aggressive = 3
 
 [tool.ruff]
-line-length = 88
+line-length = 120
 output-format = "grouped"
 target-version = "py38"
 

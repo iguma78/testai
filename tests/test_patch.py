@@ -14,9 +14,7 @@ from result_ai_sdk.patch import SUPPORTED_MODULES_TO_PATCH, _patch_func
 
 
 def get_func(module_name_to_patch: str, func_name_to_patch: str):
-    (parent, attribute, original) = wrapt.resolve_path(
-        module_name_to_patch, func_name_to_patch
-    )
+    (parent, attribute, original) = wrapt.resolve_path(module_name_to_patch, func_name_to_patch)
     return original
 
 
@@ -25,13 +23,15 @@ class TestResultAiCm(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.maxDiff = None
-        cls.mock_create_response = mock.MagicMock()
         cls.original_funcs = {}
         for module_obj in SUPPORTED_MODULES_TO_PATCH:
-            cls.original_funcs[
-                (module_obj.module_name_to_patch, module_obj.func_name_to_patch)
-            ] = get_func(module_obj.module_name_to_patch, module_obj.func_name_to_patch)
+            cls.original_funcs[(module_obj.module_name_to_patch, module_obj.func_name_to_patch)] = get_func(
+                module_obj.module_name_to_patch, module_obj.func_name_to_patch
+            )
+
+    def setUp(self):
+        self.maxDiff = None
+        self.mock_create_response = mock.MagicMock()
 
     @mock.patch("result_ai_sdk.patch.add_to_queue")
     def test_openai_monitoring(self, mock_add_to_queue):
@@ -41,9 +41,7 @@ class TestResultAiCm(unittest.TestCase):
                 func_name=module_obj.func_name_to_patch,
             ):
                 mock_create = mock.create_autospec(
-                    self.original_funcs[
-                        (module_obj.module_name_to_patch, module_obj.func_name_to_patch)
-                    ]
+                    TestResultAiCm.original_funcs[(module_obj.module_name_to_patch, module_obj.func_name_to_patch)]
                 )
                 mock_create.return_value = self.mock_create_response
 
@@ -85,29 +83,14 @@ class TestResultAiCm(unittest.TestCase):
                 mock_add_to_queue.assert_called_once()
 
                 data = mock_add_to_queue.call_args[0][0]
-                self.assertEqual(
-                    data.pop("function_patched"), module_obj.func_name_to_patch
-                )
-                self.assertEqual(
-                    data.pop("module_name_to_patch"), module_obj.module_name_to_patch
-                )
-                self.assertEqual(
-                    data.pop("root_module_name"), module_obj.root_module_name
-                )
-                datetime_in_data = datetime.datetime.fromisoformat(
-                    data.pop("timestamp")
-                )
-                self.assertTrue(
-                    datetime.datetime.now() - datetime.timedelta(seconds=10)
-                    <= datetime_in_data
-                )
+                self.assertEqual(data.pop("function_patched"), module_obj.func_name_to_patch)
+                self.assertEqual(data.pop("module_name_to_patch"), module_obj.module_name_to_patch)
+                self.assertEqual(data.pop("root_module_name"), module_obj.root_module_name)
+                datetime_in_data = datetime.datetime.fromisoformat(data.pop("timestamp"))
+                self.assertTrue(datetime.datetime.now() - datetime.timedelta(seconds=10) <= datetime_in_data)
                 self.assertTrue(datetime_in_data <= datetime.datetime.now())
-                self.assertIs(
-                    data["response_data"].pop("response"), self.mock_create_response
-                )
-                self.assertAlmostEqual(
-                    data["response_data"].pop("latency"), 0.0, delta=0.001
-                )
+                self.assertIs(data["response_data"].pop("response"), self.mock_create_response)
+                self.assertAlmostEqual(data["response_data"].pop("latency"), 0.0, delta=0.001)
 
                 expected_data = {
                     "user_id": "1897ce6d-5694-41ce-a75d-8ea9e4dc81b4",
@@ -149,16 +132,12 @@ class TestResultAiCm(unittest.TestCase):
                 # Use the context manager
                 with result_ai("test_task"):
                     # The function should be wrapped
-                    current_func = get_func(
-                        module_obj.module_name_to_patch, module_obj.func_name_to_patch
-                    )
+                    current_func = get_func(module_obj.module_name_to_patch, module_obj.func_name_to_patch)
                     self.assertIsInstance(current_func, wrapt.FunctionWrapper)
                     self.assertEqual(current_func, mock_create)
                     self.assertIsNot(current_func, mock_create)
                     self.assertIs(current_func.__wrapped__, mock_create)
-                    self.assertIn(
-                        "result_ai_wrapper", current_func._self_wrapper.__name__
-                    )
+                    self.assertIn("result_ai_wrapper", current_func._self_wrapper.__name__)
 
                     client = openai.OpenAI(api_key="")
                     # Make an API call
@@ -169,9 +148,7 @@ class TestResultAiCm(unittest.TestCase):
                     self.assertIs(response.content, self.mock_create_response.content)
 
                 mock_add_to_queue.assert_called_once()
-                current_func = get_func(
-                    module_obj.module_name_to_patch, module_obj.func_name_to_patch
-                )
+                current_func = get_func(module_obj.module_name_to_patch, module_obj.func_name_to_patch)
                 mock_create.assert_called_once()
                 # After the context manager exits, the function should be restored
                 self.assertNotIsInstance(current_func, wrapt.ObjectProxy)

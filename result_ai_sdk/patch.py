@@ -17,17 +17,13 @@ logger = logging.getLogger("result_ai_sdk")
 
 
 def _patch_func(module_name_to_patch: str, func_name_to_patch: str, new_func: Callable):
-    (parent, attribute, original) = wrapt.resolve_path(
-        module_name_to_patch, func_name_to_patch
-    )
+    (parent, attribute, original) = wrapt.resolve_path(module_name_to_patch, func_name_to_patch)
     setattr(parent, attribute, new_func)
     return original
 
 
 def _wrap_func(module_name_to_patch: str, func_name_to_patch: str, wrapper: Callable):
-    (parent, attribute, original) = wrapt.resolve_path(
-        module_name_to_patch, func_name_to_patch
-    )
+    (parent, attribute, original) = wrapt.resolve_path(module_name_to_patch, func_name_to_patch)
     setattr(parent, attribute, wrapper(original))
     return original
 
@@ -51,7 +47,9 @@ class FunctionPatcher(BaseModel):
                 min_version = version.parse(self.min_module_version)
                 if module_version < min_version:
                     logger.debug(
-                        f"Result AI | Skipping patch for {self.module_name_to_patch} because it's not supported (version {module_version} is less than {min_version})."
+                        f"Result AI | Skipping patch for {self.module_name_to_patch} "
+                        f"because it's not supported "
+                        f"(version {module_version} is less than {min_version})."
                     )
                     return False
 
@@ -59,14 +57,14 @@ class FunctionPatcher(BaseModel):
                 max_version = version.parse(self.max_module_version)
                 if module_version > max_version:
                     logger.debug(
-                        f"Result AI | Skipping patch for {self.module_name_to_patch} because it's not supported (version {module_version} is greater than {max_version})."
+                        f"Result AI | Skipping patch for {self.module_name_to_patch} "
+                        f"because it's not supported "
+                        f"(version {module_version} is greater than {max_version})."
                     )
                     return False
             return True
         except ImportError:
-            logger.debug(
-                f"Result AI | Skipping patch for {self.module_name_to_patch} because it's not installed."
-            )
+            logger.debug(f"Result AI | Skipping patch for {self.module_name_to_patch} because it's not installed.")
             return False
 
     def patch(self, wrapper: Callable):
@@ -84,9 +82,7 @@ class FunctionPatcher(BaseModel):
         if not self.patched:
             return
 
-        _patch_func(
-            self.module_name_to_patch, self.func_name_to_patch, self.original_func
-        )
+        _patch_func(self.module_name_to_patch, self.func_name_to_patch, self.original_func)
         self.original_func = None
 
 
@@ -101,9 +97,7 @@ SUPPORTED_MODULES_TO_PATCH = [
 ]
 
 
-def result_ai_wrapper_with_arguments(
-    task_name: str, args_to_report: dict, patcher: FunctionPatcher
-):
+def result_ai_wrapper_with_arguments(task_name: str, args_to_report: dict, patcher: FunctionPatcher):
     @wrapt.decorator
     def result_ai_wrapper(wrapped, _instance, args, kwargs):
         pre_hook_success = False
@@ -112,23 +106,17 @@ def result_ai_wrapper_with_arguments(
             start_time = time.perf_counter()
             pre_hook_success = True
         except Exception:
-            logger.error(
-                f"Result AI | Error in pre hook API call for task {task_name}: {traceback.format_exc()}"
-            )
+            logger.error(f"Result AI | Error in pre hook API call for task {task_name}: {traceback.format_exc()}")
 
         response = wrapped(*args, **kwargs)
 
         if pre_hook_success:
             try:
                 time_took = time.perf_counter() - start_time
-                logger.debug(
-                    f"Result AI | API call completed in {time_took:.3f}s for task: {task_name}"
-                )
+                logger.debug(f"Result AI | API call completed in {time_took:.3f}s for task: {task_name}")
 
                 request_data = {
-                    "llm_call_arguments": inspect.signature(wrapped)
-                    .bind(*args, **kwargs)
-                    .arguments,
+                    "llm_call_arguments": inspect.signature(wrapped).bind(*args, **kwargs).arguments,
                 }
 
                 response_data = {
@@ -137,9 +125,7 @@ def result_ai_wrapper_with_arguments(
                     "latency": time_took,
                 }
 
-                logger.debug(
-                    f"Result AI | Adding result to queue for task: {task_name}"
-                )
+                logger.debug(f"Result AI | Adding result to queue for task: {task_name}")
 
                 add_to_queue(
                     {
@@ -156,9 +142,7 @@ def result_ai_wrapper_with_arguments(
                 )
 
             except Exception:
-                logger.error(
-                    f"Result AI | Error in post hook API call for task {task_name}: {traceback.format_exc()}"
-                )
+                logger.error(f"Result AI | Error in post hook API call for task {task_name}: {traceback.format_exc()}")
 
         return response
 
