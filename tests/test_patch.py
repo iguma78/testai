@@ -1,11 +1,13 @@
 """
-Unit tests for the TestAI SDK core functionality.
+Unit tests for the TestAI SDK functionality.
 """
 
 import unittest
 import unittest.mock as mock
 import openai
-from result_ai_sdk import result_ai_cm, add_to_queue
+import wrapt
+from result_ai_sdk import result_ai_cm
+from result_ai_sdk.queue import add_to_queue
 
 
 class TestResultAiCm(unittest.TestCase):
@@ -36,14 +38,18 @@ class TestResultAiCm(unittest.TestCase):
         # Restore the original add_to_queue function
         globals()['add_to_queue'] = self.original_add_to_queue
     
-    @mock.patch('testai_sdk.core.add_to_queue')
+    @mock.patch('result_ai_sdk.queue.add_to_queue')
     def test_openai_monitoring(self, mock_add_to_queue):
         """Test that OpenAI API calls are properly monitored."""
         # Mock the OpenAI API
-        openai.resources.chat.completions.Completions.create = mock.MagicMock(return_value=self.mock_response)
+        mock_create = mock.MagicMock(return_value=self.mock_response)
+        openai.resources.chat.completions.Completions.create = mock_create
         
         # Create a context manager
         with result_ai_cm("test_task", param="value"):
+            # The function should be wrapped
+            self.assertIsInstance(openai.resources.chat.completions.Completions.create, wrapt.ObjectProxy)
+            
             # Make an OpenAI API call
             response = openai.chat.completions.create(
                 model="gpt-3.5-turbo",
@@ -79,7 +85,7 @@ class TestResultAiCm(unittest.TestCase):
         self.assertEqual(data["response_data"]["total_tokens"], 100)
         self.assertEqual(data["response_data"]["completion"], "Test response")
     
-    @mock.patch('testai_sdk.core.add_to_queue')
+    @mock.patch('result_ai_sdk.queue.add_to_queue')
     def test_context_manager_restoration(self, mock_add_to_queue):
         """Test that the original OpenAI API is restored after the context manager exits."""
         # Save the original function
@@ -91,7 +97,8 @@ class TestResultAiCm(unittest.TestCase):
         
         # Use the context manager
         with result_ai_cm("test_task"):
-            # The function should be replaced
+            # The function should be wrapped
+            self.assertIsInstance(openai.resources.chat.completions.Completions.create, wrapt.ObjectProxy)
             self.assertNotEqual(openai.resources.chat.completions.Completions.create, original_func)
             
             # Make an API call
@@ -102,7 +109,8 @@ class TestResultAiCm(unittest.TestCase):
         
         # After the context manager exits, the function should be restored
         self.assertEqual(openai.resources.chat.completions.Completions.create, original_func)
+        self.assertNotIsInstance(openai.resources.chat.completions.Completions.create, wrapt.ObjectProxy)
 
 
 if __name__ == "__main__":
-    unittest.main()
+    unittest.main() 
