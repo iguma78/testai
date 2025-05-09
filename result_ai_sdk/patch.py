@@ -126,7 +126,7 @@ def result_ai_wrapper_with_arguments(
 
                 response_data = {
                     "success": True,
-                    "response": response,
+                    "response": response.dict() if hasattr(response, "dict") else response,
                     "latency": time_took,
                 }
 
