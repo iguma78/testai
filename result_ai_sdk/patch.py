@@ -5,7 +5,7 @@ import inspect
 import logging
 import time
 import traceback
-from typing import Any, Callable, Optional
+from typing import Callable, Optional
 
 import wrapt
 from packaging import version
