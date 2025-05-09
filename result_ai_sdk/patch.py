@@ -1,5 +1,6 @@
 import copy
 import time
+import string
 import inspect
 import logging
 import datetime
@@ -11,9 +12,11 @@ import wrapt
 from pydantic import BaseModel
 from packaging import version
 
-from result_ai_sdk.queue_utils import add_to_queue
+from result_ai_sdk.queue_utils import add_to_queue, start_queue_worker
 
 logger = logging.getLogger("result_ai_sdk")
+
+start_queue_worker()
 
 
 def _patch_func(module_name_to_patch: str, func_name_to_patch: str, new_func: Callable):
@@ -97,7 +100,9 @@ SUPPORTED_MODULES_TO_PATCH = [
 ]
 
 
-def result_ai_wrapper_with_arguments(task_name: str, args_to_report: dict, patcher: FunctionPatcher):
+def result_ai_wrapper_with_arguments(
+    task_name: str, prompt_template: str, args_to_report: dict, metadata: dict, patcher: FunctionPatcher
+):
     @wrapt.decorator
     def result_ai_wrapper(wrapped, _instance, args, kwargs):
         pre_hook_success = False
@@ -135,7 +140,9 @@ def result_ai_wrapper_with_arguments(task_name: str, args_to_report: dict, patch
                         "root_module_name": str(patcher.root_module_name),
                         "timestamp": datetime.datetime.now().isoformat(),
                         "task_name": task_name,
+                        "prompt_template": prompt_template,
                         "user_input_args": args_to_report,
+                        "metadata": metadata,
                         "request_data": request_data,
                         "response_data": response_data,
                     }
@@ -150,32 +157,28 @@ def result_ai_wrapper_with_arguments(task_name: str, args_to_report: dict, patch
 
 
 class result_ai:
-    """
-    A context manager for monitoring OpenAI API calls.
-
-    This class allows you to temporarily modify the behavior of the OpenAI API
-    to monitor and record API calls, including request details, response metrics,
-    and performance data.
-
-    Args:
-        task_name: A string identifier for the current task
-        **kwargs: Additional keyword arguments to be stored with the API call data
-
-    Example:
-        >>> from testai_sdk import result_ai_cm
-        >>> # Use the context manager
-        >>> with result_ai_cm("classification_task", model="gpt-4"):
-        ...     # Make an OpenAI API call
-        ...     response = openai.chat.completions.create(
-        ...         model="gpt-4",
-        ...         messages=[{"role": "user", "content": "Hello, world!"}],
-        ...     )
-        ...     # The API call will be monitored and recorded
-    """
-
-    def __init__(self, task_name: str, **kwargs):
+    def __init__(self, task_name: str, prompt_template: str, metadata: Optional[dict] = None, **kwargs):
         self.task_name = task_name
+        self.prompt_template = prompt_template
         self.input_args_to_report = kwargs
+        try:
+            keywords_in_prompt_template = [
+                field_name for _, field_name, _, _ in string.Formatter().parse(prompt_template) if field_name
+            ]
+            if set(keywords_in_prompt_template) != set(kwargs.keys()) and len(keywords_in_prompt_template) == len(
+                set(kwargs.keys())
+            ):
+                logger.warning(
+                    f"Result AI | Prompt template {prompt_template} has keywords {keywords_in_prompt_template} "
+                    f"that do not match the input arguments {kwargs.keys()}"
+                )
+        except Exception:
+            logger.error(
+                f"Result AI | Error in prompt template validation for task {task_name}: {traceback.format_exc()}"
+            )
+
+        self.metadata = metadata if metadata is not None else {}
+
         self.patchers = copy.deepcopy(SUPPORTED_MODULES_TO_PATCH)
 
     def __enter__(self):
@@ -183,7 +186,9 @@ class result_ai:
             patcher.patch(
                 wrapper=result_ai_wrapper_with_arguments(
                     task_name=self.task_name,
+                    prompt_template=self.prompt_template,
                     args_to_report=self.input_args_to_report,
+                    metadata=self.metadata,
                     patcher=patcher,
                 )
             )

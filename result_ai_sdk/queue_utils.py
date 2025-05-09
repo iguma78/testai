@@ -65,9 +65,10 @@ def queue_worker():
 
 
 # Start the worker thread
-worker_thread = threading.Thread(target=queue_worker)
-worker_thread.daemon = True
-worker_thread.start()
+def start_queue_worker():
+    worker_thread = threading.Thread(target=queue_worker)
+    worker_thread.daemon = True
+    worker_thread.start()
 
 
 def add_to_queue(data: Dict[str, Any]) -> None:

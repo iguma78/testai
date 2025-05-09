@@ -52,7 +52,7 @@ class TestResultAiCm(unittest.TestCase):
                 )
 
                 # Create a context manager
-                with result_ai("test_task", param="value"):
+                with result_ai("test_task", prompt_template="{param} there", param="value"):
                     # The function should be wrapped
                     self.assertIsInstance(
                         get_func(
@@ -95,6 +95,8 @@ class TestResultAiCm(unittest.TestCase):
                 expected_data = {
                     "user_id": "1897ce6d-5694-41ce-a75d-8ea9e4dc81b4",
                     "task_name": "test_task",
+                    "prompt_template": "{param} there",
+                    "metadata": {},
                     "user_input_args": {"param": "value"},
                     "request_data": {
                         "llm_call_arguments": {
@@ -130,7 +132,7 @@ class TestResultAiCm(unittest.TestCase):
                 )
 
                 # Use the context manager
-                with result_ai("test_task"):
+                with result_ai("test_task", prompt_template="{param} there", param="value"):
                     # The function should be wrapped
                     current_func = get_func(module_obj.module_name_to_patch, module_obj.func_name_to_patch)
                     self.assertIsInstance(current_func, wrapt.FunctionWrapper)
