@@ -42,7 +42,8 @@ try:
             ],
         )
         print(f"Response: {response.choices[0].message.content}")
-        # The API call will be monitored and data will be sent to the collection endpoint
+        # The API call will be monitored and data will be sent to the collection
+        # endpoint
 except Exception as e:
     print(f"Error making API call: {e}")
 print("=" * 40)

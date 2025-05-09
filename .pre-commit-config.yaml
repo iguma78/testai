@@ -23,6 +23,11 @@ repos:
     -   id: isort
         args: ["--profile", "black"]
 
+-   repo: https://github.com/hhatto/autopep8
+    rev: v2.3.2
+    hooks:
+    -   id: autopep8
+
 -   repo: https://github.com/pycqa/flake8
     rev: 7.0.0
     hooks:
@@ -39,4 +44,3 @@ repos:
     hooks:
     -   id: mypy
         additional_dependencies: [types-requests]
-        args: [--ignore-missing-imports]
