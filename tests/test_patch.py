@@ -6,8 +6,8 @@ import datetime
 import unittest
 import unittest.mock as mock
 
-import openai
 import wrapt
+import openai
 
 from result_ai_sdk import result_ai
 from result_ai_sdk.patch import SUPPORTED_MODULES_TO_PATCH, _patch_func

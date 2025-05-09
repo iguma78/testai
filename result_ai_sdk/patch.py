@@ -1,15 +1,15 @@
 import copy
-import datetime
-import importlib
+import time
 import inspect
 import logging
-import time
+import datetime
+import importlib
 import traceback
 from typing import Callable, Optional
 
 import wrapt
-from packaging import version
 from pydantic import BaseModel
+from packaging import version
 
 from result_ai_sdk.queue_utils import add_to_queue
 
@@ -117,8 +117,7 @@ class result_ai:
         >>> with result_ai_cm("classification_task", model="gpt-4"):
         ...     # Make an OpenAI API call
         ...     response = openai.chat.completions.create(
-        ...         model="gpt-4",
-        ...         messages=[{"role": "user", "content": "Hello, world!"}]
+        ...         model="gpt-4", messages=[{"role": "user", "content": "Hello, world!"}]
         ...     )
         ...     # The API call will be monitored and recorded
     """

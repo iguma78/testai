@@ -4,10 +4,10 @@ Queue management for the TestAI SDK.
 This module provides queue functionality for batching and processing API requests.
 """
 
-import logging
-import queue as std_queue
-import threading
 import time
+import queue as std_queue
+import logging
+import threading
 from typing import Any, Dict
 
 import requests
