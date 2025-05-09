@@ -2,6 +2,7 @@
 Unit tests for the TestAI SDK functionality.
 """
 
+import os
 import datetime
 import unittest
 import unittest.mock as mock
@@ -50,7 +51,7 @@ class TestResultAiCm(unittest.TestCase):
                     module_obj.func_name_to_patch,
                     mock_create,
                 )
-
+                os.environ["RESULTAI_API_KEY"] = "test_api_key"
                 # Create a context manager
                 with result_ai("test_task", prompt_template="{param} there", param="value"):
                     # The function should be wrapped
@@ -89,11 +90,11 @@ class TestResultAiCm(unittest.TestCase):
                 datetime_in_data = datetime.datetime.fromisoformat(data.pop("timestamp"))
                 self.assertTrue(datetime.datetime.now() - datetime.timedelta(seconds=10) <= datetime_in_data)
                 self.assertTrue(datetime_in_data <= datetime.datetime.now())
-                self.assertIs(data["response_data"].pop("response"), self.mock_create_response)
+                self.assertIs(data["response_data"].pop("response"), self.mock_create_response.dict())
                 self.assertAlmostEqual(data["response_data"].pop("latency"), 0.0, delta=0.001)
 
                 expected_data = {
-                    "user_id": "1897ce6d-5694-41ce-a75d-8ea9e4dc81b4",
+                    "api_key": "test_api_key",
                     "task_name": "test_task",
                     "prompt_template": "{param} there",
                     "metadata": {},
@@ -130,7 +131,7 @@ class TestResultAiCm(unittest.TestCase):
                     module_obj.func_name_to_patch,
                     mock_create,
                 )
-
+                os.environ["RESULTAI_API_KEY"] = "test_api_key"
                 # Use the context manager
                 with result_ai("test_task", prompt_template="{param} there", param="value"):
                     # The function should be wrapped
