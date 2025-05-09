@@ -52,7 +52,7 @@ dev = [
 
 [tool.black]
 line-length = 88
-target-version = ["py38", "py39", "py310", "py311", "py312"]
+target-version = ["py38"]
 include = '\.pyi?$'
 
 [tool.isort]
@@ -81,3 +81,8 @@ max_line_length = 88
 in-place = true
 recursive = true
 aggressive = 3
+
+[tool.ruff]
+line-length = 88
+output-format = "grouped"
+target-version = "py38"
