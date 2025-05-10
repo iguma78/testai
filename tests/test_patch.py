@@ -85,8 +85,8 @@ class TestResultAiCm(unittest.TestCase):
 
                 data = mock_add_to_queue.call_args[0][0]
                 self.assertEqual(data.pop("function_patched"), module_obj.func_name_to_patch)
-                self.assertEqual(data.pop("module_name_to_patch"), module_obj.module_name_to_patch)
-                self.assertEqual(data.pop("root_module_name"), module_obj.root_module_name)
+                self.assertEqual(data.pop("module_patched"), module_obj.module_name_to_patch)
+                self.assertEqual(data.pop("root_module_name_patched"), module_obj.root_module_name)
                 datetime_in_data = datetime.datetime.fromisoformat(data.pop("timestamp"))
                 self.assertTrue(datetime.datetime.now() - datetime.timedelta(seconds=10) <= datetime_in_data)
                 self.assertTrue(datetime_in_data <= datetime.datetime.now())
