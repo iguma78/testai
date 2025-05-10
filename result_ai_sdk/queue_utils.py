@@ -4,6 +4,7 @@ Queue management for the TestAI SDK.
 This module provides queue functionality for batching and processing API requests.
 """
 
+import os
 import time
 import queue as std_queue
 import logging
@@ -23,7 +24,7 @@ logger.setLevel(logging.INFO)
 # Create a queue for batching requests
 request_queue = std_queue.Queue()
 BATCH_SIZE = 1
-CHECK_INTERVAL = 0.01
+CHECK_INTERVAL = 0.1
 API_ENDPOINT = "https://41aqa6x62g.execute-api.us-east-1.amazonaws.com/prompts"
 
 
@@ -37,6 +38,8 @@ def queue_worker():
     logger.info("Queue worker started")
     batch = []
     last_send_time = time.time()
+    notified_no_api_key = False
+
     while True:
         # Process all available items in the queue
         while not request_queue.empty():
@@ -47,16 +50,25 @@ def queue_worker():
                 request_queue.task_done()
 
                 current_time = time.time()
+
                 # If batch size reached or timeout exceeded, send immediately
                 if len(batch) >= BATCH_SIZE or (current_time - last_send_time) >= 3:
                     try:
+                        api_key = os.getenv("RESULTAI_API_KEY", "")
+                        if not api_key and not notified_no_api_key:
+                            logger.warning(
+                                "RESULTAI_API_KEY environment variable is not set. Monitoring will not be enabled."
+                            )
+                            notified_no_api_key = True
+
                         logger.debug(f"Sending batch of {len(batch)} items")
-                        requests.post(API_ENDPOINT, json={"prompts": batch}, timeout=5)
-                        logger.debug("Batch sent successfully")
+                        response = requests.post(API_ENDPOINT, json={"prompts": batch, "api_key": api_key}, timeout=10)
+                        logger.debug(f"Batch sent successfully. Response: {response.json()}")
                         last_send_time = current_time
                     except Exception as e:
                         logger.error(f"Error sending batch: {e}")
                     batch = []
+
             except std_queue.Empty:
                 break
 

@@ -1,4 +1,3 @@
-import os
 import copy
 import time
 import string
@@ -133,13 +132,8 @@ def result_ai_wrapper_with_arguments(
 
                 logger.debug(f"Result AI | Adding result to queue for task: {task_name}")
 
-                api_key = os.getenv("RESULTAI_API_KEY", "")
-                if not api_key:
-                    logger.warning("RESULTAI_API_KEY environment variable is not set. Monitoring will not be enabled.")
-
                 add_to_queue(
                     {
-                        "api_key": api_key,
                         "function_patched": str(patcher.func_name_to_patch),
                         "module_patched": str(patcher.module_name_to_patch),
                         "root_module_name_patched": str(patcher.root_module_name),

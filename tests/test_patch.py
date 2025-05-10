@@ -94,7 +94,6 @@ class TestResultAiCm(unittest.TestCase):
                 self.assertAlmostEqual(data["response_data"].pop("latency"), 0.0, delta=0.001)
 
                 expected_data = {
-                    "api_key": "test_api_key",
                     "task_name": "test_task",
                     "prompt_template": "{param} there",
                     "metadata": {},
