@@ -141,8 +141,8 @@ def result_ai_wrapper_with_arguments(
                     {
                         "api_key": api_key,
                         "function_patched": str(patcher.func_name_to_patch),
-                        "module_name_to_patch": str(patcher.module_name_to_patch),
-                        "root_module_name": str(patcher.root_module_name),
+                        "module_patched": str(patcher.module_name_to_patch),
+                        "root_module_name_patched": str(patcher.root_module_name),
                         "timestamp": datetime.datetime.now().isoformat(),
                         "task_name": task_name,
                         "prompt_template": prompt_template,
