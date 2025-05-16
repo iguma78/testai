@@ -164,7 +164,12 @@ def result_ai_wrapper_with_arguments(
 
 
 class result_ai:
-    def __init__(self, task_name: str, prompt_template: str, metadata: Optional[dict] = None, **kwargs):
+    def __init__(
+        self, task_name: str, prompt_template: str, metadata: Optional[dict] = None, enabled: bool = True, **kwargs
+    ):
+        self.enabled = enabled
+        if not self.enabled:
+            return
         self.task_name = task_name
         self.prompt_template = prompt_template
         self.input_args_to_report = kwargs
@@ -189,6 +194,8 @@ class result_ai:
         self.patchers = copy.deepcopy(SUPPORTED_MODULES_TO_PATCH)
 
     def __enter__(self):
+        if not self.enabled:
+            return
         for patcher in self.patchers:
             patcher.patch(
                 wrapper=result_ai_wrapper_with_arguments(
@@ -201,5 +208,7 @@ class result_ai:
             )
 
     def __exit__(self, exctype, excinst, exctb):
+        if not self.enabled:
+            return
         for patcher in self.patchers:
             patcher.unpatch()
