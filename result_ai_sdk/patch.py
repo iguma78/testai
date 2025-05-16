@@ -4,9 +4,9 @@ import string
 import inspect
 import logging
 import datetime
-import importlib
 import traceback
 from typing import Callable, Optional
+from importlib.metadata import version as importlib_version
 
 import wrapt
 from pydantic import BaseModel
@@ -42,9 +42,7 @@ class FunctionPatcher(BaseModel):
 
     def is_module_version_supported(self) -> bool:
         try:
-            module = importlib.import_module(self.root_module_name)
-
-            module_version = version.parse(module.__version__)
+            module_version = version.parse(importlib_version(self.root_module_name))
 
             if self.min_module_version is not None:
                 min_version = version.parse(self.min_module_version)
@@ -96,7 +94,14 @@ SUPPORTED_MODULES_TO_PATCH = [
         root_module_name="openai",
         min_module_version="1.0.0",
         max_module_version=None,
-    )
+    ),
+    FunctionPatcher(
+        module_name_to_patch="langchain_core.language_models",
+        func_name_to_patch="BaseChatModel.generate",
+        root_module_name="langchain_core",
+        min_module_version="0.3.0",
+        max_module_version=None,
+    ),
 ]
 
 
@@ -121,7 +126,10 @@ def result_ai_wrapper_with_arguments(
                 logger.debug(f"Result AI | API call completed in {time_took:.3f}s for task: {task_name}")
 
                 request_data = {
-                    "llm_call_arguments": inspect.signature(wrapped).bind(*args, **kwargs).arguments,
+                    "llm_call_instance": _instance.__dict__ if _instance is not None else None,
+                    "llm_call_instance_type": type(_instance),
+                    "llm_call_instance_type_name": type(_instance).__name__,
+                    "llm_call_arguments": inspect.signature(obj=wrapped).bind(*args, **kwargs).arguments,
                 }
 
                 response_data = {
