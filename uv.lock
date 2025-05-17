@@ -772,6 +772,15 @@ wheels = [
 ]
 
 [[package]]
+name = "jsonpickle"
+version = "4.0.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/33/4bda317ab294722fcdfff8f63aab74af9fda3675a4652d984a101aa7587e/jsonpickle-4.0.5.tar.gz", hash = "sha256:f299818b39367c361b3f26bdba827d4249ab5d383cd93144d0f94b5417aacb35", size = 315661, upload-time = "2025-03-29T19:22:56.92Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dc/1b/0e79cf115e0f54f1e8f56effb6ffd2ef8f92e9c324d692ede660067f1bfe/jsonpickle-4.0.5-py3-none-any.whl", hash = "sha256:b4ac7d0a75ddcdfd93445737f1d36ff28768690d43e54bf5d0ddb1d915e580df", size = 46382, upload-time = "2025-03-29T19:22:54.252Z" },
+]
+
+[[package]]
 name = "jsonpointer"
 version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1656,9 +1665,10 @@ wheels = [
 
 [[package]]
 name = "result-ai-sdk"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
+    { name = "jsonpickle" },
     { name = "requests" },
     { name = "wrapt" },
 ]
@@ -1690,6 +1700,7 @@ requires-dist = [
     { name = "flake8-docstrings", marker = "extra == 'dev'" },
     { name = "ipython", marker = "extra == 'dev'" },
     { name = "isort", marker = "extra == 'dev'" },
+    { name = "jsonpickle", specifier = ">=4.0.0" },
     { name = "langchain", marker = "extra == 'test'" },
     { name = "langchain-aws", marker = "extra == 'test'" },
     { name = "mypy", marker = "extra == 'dev'" },

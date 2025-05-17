@@ -13,6 +13,8 @@ from typing import Any, Dict
 
 import requests
 
+API_SETTINGS = {"endpoint": "https://41aqa6x62g.execute-api.us-east-1.amazonaws.com/prompts"}
+
 # Configure logging
 logger = logging.getLogger("result_ai_sdk.queue")
 handler = logging.StreamHandler()
@@ -25,7 +27,6 @@ logger.setLevel(logging.INFO)
 request_queue = std_queue.Queue()
 BATCH_SIZE = 1
 CHECK_INTERVAL = 0.1
-API_ENDPOINT = "https://41aqa6x62g.execute-api.us-east-1.amazonaws.com/prompts"
 
 
 def queue_worker():
@@ -62,7 +63,9 @@ def queue_worker():
                             notified_no_api_key = True
 
                         logger.debug(f"Sending batch of {len(batch)} items")
-                        response = requests.post(API_ENDPOINT, json={"prompts": batch, "api_key": api_key}, timeout=10)
+                        response = requests.post(
+                            API_SETTINGS["endpoint"], json={"prompts": batch, "api_key": api_key}, timeout=10
+                        )
                         logger.debug(f"Batch sent successfully. Response: {response.json()}")
                         last_send_time = current_time
                     except Exception as e:

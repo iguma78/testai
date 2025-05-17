@@ -125,9 +125,15 @@ def verify_expected_data(data: Dict[str, Any], module_obj):
 
 
 @pytest.mark.parametrize(
-    "module_obj, enabled", [(module, enabled) for module, enabled in zip(SUPPORTED_MODULES_TO_PATCH, [True, False])]
+    "module_obj, enabled, enabled_env",
+    [
+        (module, enabled, enabled_env)
+        for module, enabled, enabled_env in zip(
+            SUPPORTED_MODULES_TO_PATCH, [True, False], ["True", "False", "false", "true", "bla", None]
+        )
+    ],
 )
-def test_module_monitoring_and_restoration(module_obj, enabled, monkeypatch, original_funcs):
+def test_module_monitoring_and_restoration(module_obj, enabled, enabled_env, monkeypatch, original_funcs):
     """Test module monitoring and restoration after context manager exits."""
 
     mock_add_to_queue = mock.MagicMock()
@@ -141,6 +147,15 @@ def test_module_monitoring_and_restoration(module_obj, enabled, monkeypatch, ori
 
     os.environ["RESULTAI_API_KEY"] = "test_api_key"
 
+    # Set or unset RESULTAI_ENABLED environment variable
+    if enabled_env is None:
+        monkeypatch.delenv("RESULTAI_ENABLED", raising=False)
+    else:
+        os.environ["RESULTAI_ENABLED"] = enabled_env
+
+    # Calculate if monitoring should actually be enabled based on both parameters
+    should_monitor = enabled and (enabled_env.lower() != "false" if enabled_env is not None else True)
+
     # Use the context manager
     with result_ai(task_name="test_task", prompt_template="{param} there", param="value", enabled=enabled):
         # The function should be wrapped
@@ -149,7 +164,7 @@ def test_module_monitoring_and_restoration(module_obj, enabled, monkeypatch, ori
             func_name_to_patch=module_obj.func_name_to_patch,
         )
 
-        if enabled:
+        if should_monitor:
             assert isinstance(current_func, wrapt.FunctionWrapper)
             assert current_func == mock_model
             assert current_func is not mock_model
@@ -168,7 +183,7 @@ def test_module_monitoring_and_restoration(module_obj, enabled, monkeypatch, ori
     # Check that the original function was called
     mock_model.assert_called_once()
 
-    if enabled:
+    if should_monitor:
         # Check that add_to_queue was called
         mock_add_to_queue.assert_called_once()
         # Verify expected data for this module

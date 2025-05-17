@@ -6,6 +6,7 @@ in Python applications.
 """
 
 from .patch import result_ai
+from .queue_utils import API_SETTINGS
 
-__version__ = "0.1.0"
-__all__ = ["result_ai"]
+__version__ = "0.1.1"
+__all__ = ["result_ai", "API_SETTINGS"]

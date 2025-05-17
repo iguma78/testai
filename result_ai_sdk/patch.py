@@ -1,4 +1,6 @@
+import os
 import copy
+import json
 import time
 import string
 import inspect
@@ -9,6 +11,7 @@ from typing import Callable, Optional
 from importlib.metadata import version as importlib_version
 
 import wrapt
+import jsonpickle
 from pydantic import BaseModel
 from packaging import version
 
@@ -105,6 +108,19 @@ SUPPORTED_MODULES_TO_PATCH = [
 ]
 
 
+def convert_to_json_serializable(obj, show_warning: bool):
+    try:
+        json.dumps(obj)
+        return obj
+    except TypeError as e:
+        new_obj = json.loads(jsonpickle.encode(obj, unpicklable=False))
+        if show_warning:
+            logger.warning(
+                f"Result AI | Object {obj} is not JSON serializable, converting to JSON string: {obj} because of {e}"
+            )
+        return new_obj
+
+
 def result_ai_wrapper_with_arguments(
     task_name: str, prompt_template: str, args_to_report: dict, metadata: dict, patcher: FunctionPatcher
 ):
@@ -126,15 +142,21 @@ def result_ai_wrapper_with_arguments(
                 logger.debug(f"Result AI | API call completed in {time_took:.3f}s for task: {task_name}")
 
                 request_data = {
-                    "llm_call_instance": _instance.__dict__ if _instance is not None else None,
+                    "llm_call_instance": convert_to_json_serializable(_instance.__dict__, show_warning=False)
+                    if _instance is not None
+                    else None,
                     "llm_call_instance_type": type(_instance),
                     "llm_call_instance_type_name": type(_instance).__name__,
-                    "llm_call_arguments": inspect.signature(obj=wrapped).bind(*args, **kwargs).arguments,
+                    "llm_call_arguments": convert_to_json_serializable(
+                        inspect.signature(obj=wrapped).bind(*args, **kwargs).arguments, show_warning=False
+                    ),
                 }
 
                 response_data = {
                     "success": True,
-                    "response": response.dict() if hasattr(response, "dict") else response,
+                    "response": convert_to_json_serializable(
+                        response.dict() if hasattr(response, "dict") else response, show_warning=False
+                    ),
                     "latency": time_took,
                 }
 
@@ -148,8 +170,8 @@ def result_ai_wrapper_with_arguments(
                         "timestamp": datetime.datetime.now().isoformat(),
                         "task_name": task_name,
                         "prompt_template": prompt_template,
-                        "user_input_args": args_to_report,
-                        "metadata": metadata,
+                        "user_input_args": convert_to_json_serializable(args_to_report, show_warning=True),
+                        "metadata": convert_to_json_serializable(metadata, show_warning=True),
                         "request_data": request_data,
                         "response_data": response_data,
                     }
@@ -167,7 +189,7 @@ class result_ai:
     def __init__(
         self, task_name: str, prompt_template: str, metadata: Optional[dict] = None, enabled: bool = True, **kwargs
     ):
-        self.enabled = enabled
+        self.enabled = enabled and os.getenv("RESULTAI_ENABLED", "true").lower() == "true"
         if not self.enabled:
             return
         self.task_name = task_name
