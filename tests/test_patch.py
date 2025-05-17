@@ -95,9 +95,9 @@ def verify_expected_data(data: Dict[str, Any], module_obj):
         assert data["root_module_name_patched"] == "openai"
 
         # Verify request data
-        assert data["request_data"]["llm_call_instance_type"] == str(get_func(
-            "openai.resources.chat.completions", "Completions"
-        ))
+        assert data["request_data"]["llm_call_instance_type"] == str(
+            get_func("openai.resources.chat.completions", "Completions")
+        )
         assert data["request_data"]["llm_call_instance_type_name"] == "Completions"
 
         # Verify LLM call arguments
