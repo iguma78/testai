@@ -145,7 +145,7 @@ def result_ai_wrapper_with_arguments(
                     "llm_call_instance": convert_to_json_serializable(_instance.__dict__, show_warning=False)
                     if _instance is not None
                     else None,
-                    "llm_call_instance_type": type(_instance),
+                    "llm_call_instance_type": str(type(_instance)),
                     "llm_call_instance_type_name": type(_instance).__name__,
                     "llm_call_arguments": convert_to_json_serializable(
                         inspect.signature(obj=wrapped).bind(*args, **kwargs).arguments, show_warning=False
