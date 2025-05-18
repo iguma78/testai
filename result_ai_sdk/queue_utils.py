@@ -13,7 +13,9 @@ from typing import Any, Dict
 
 import requests
 
-API_SETTINGS = {"endpoint": "https://41aqa6x62g.execute-api.us-east-1.amazonaws.com/prompts"}
+API_SETTINGS = {"endpoint": "https://resultai-862818623075.europe-west1.run.app/prompts"}
+# for local run only
+# API_SETTINGS = {"endpoint": "http://localhost:8080/prompts"}
 
 # Configure logging
 logger = logging.getLogger("result_ai_sdk.queue")
