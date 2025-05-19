@@ -155,7 +155,7 @@ def result_ai_wrapper_with_arguments(
                 response_data = {
                     "success": True,
                     "response": convert_to_json_serializable(
-                        response, show_warning=False
+                        response.dict() if hasattr(response, "dict") else response, show_warning=False
                     ),
                     "latency": time_took,
                 }
