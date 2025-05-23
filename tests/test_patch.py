@@ -6,6 +6,7 @@ import os
 import datetime
 import unittest.mock as mock
 from typing import Any, Dict
+from itertools import product
 
 import wrapt
 import openai
@@ -56,6 +57,8 @@ def create_client_and_make_call(module_obj):
             model="anthropic.claude-3-7-sonnet-20250219-v1:0",
             model_provider="bedrock_converse",
             region_name="us-east-1",
+            max_tokens=1000,
+            temperature=0.5,
         )
 
         # Convert dict messages to langchain message objects
@@ -78,6 +81,10 @@ def verify_expected_data(data: Dict[str, Any], module_obj):
 
     assert data["response_data"]["latency"] > 0
     assert data["response_data"]["latency"] < 0.001
+
+    # Check that usage_metadata and response fields exist in response_data
+    assert "usage_metadata" in data["response_data"]
+    assert "response" in data["response_data"]
 
     assert isinstance(data["request_data"]["llm_call_instance"], dict)
     for key in data["request_data"]["llm_call_instance"].keys():
@@ -116,19 +123,25 @@ def verify_expected_data(data: Dict[str, Any], module_obj):
         # Verify request data
         from langchain_aws import ChatBedrockConverse
 
-        assert data["request_data"]["llm_call_instance"]["model_id"] == "anthropic.claude-3-7-sonnet-20250219-v1:0"
+        assert data["request_data"]["llm_call_instance"]["model"] == "anthropic.claude-3-7-sonnet-20250219-v1:0"
+        assert data["request_data"]["llm_call_instance"]["is_cache"] is False
+        assert data["request_data"]["llm_call_instance"]["max_tokens"] == 1000
+        assert data["request_data"]["llm_call_instance"]["temperature"] == 0.5
         assert data["request_data"]["llm_call_instance_type"] == str(ChatBedrockConverse)
         assert data["request_data"]["llm_call_instance_type_name"] == "ChatBedrockConverse"
 
         # For LangChain, we're only checking that the messages entry exists since the format changes
         assert "messages" in data["request_data"]["llm_call_arguments"]
 
+    else:
+        pytest.fail(f"Unsupported module: {module_obj.module_name_to_patch}")
+
 
 @pytest.mark.parametrize(
     "module_obj, enabled, enabled_env",
     [
         (module, enabled, enabled_env)
-        for module, enabled, enabled_env in zip(
+        for module, enabled, enabled_env in product(
             SUPPORTED_MODULES_TO_PATCH, [True, False], ["True", "False", "false", "true", "bla", None]
         )
     ],

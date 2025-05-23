@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "result-ai-sdk"
-version = "0.1.1"
+version = "0.1.2"
 description = "A Python SDK for monitoring LLM calls"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -49,8 +49,8 @@ dev = [
 
 test = [
     "pytest",
-    "openai",
-    "langchain",
+    "openai>=1.0.0",
+    "langchain>=0.3.0",
     "langchain_aws",
 ]
 

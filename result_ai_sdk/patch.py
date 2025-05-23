@@ -113,7 +113,7 @@ def convert_to_json_serializable(obj, show_warning: bool):
         json.dumps(obj)
         return obj
     except TypeError as e:
-        new_obj = json.loads(jsonpickle.encode(obj, unpicklable=False))
+        new_obj = json.loads(jsonpickle.encode(obj, unpicklable=False, fail_safe=str))
         if show_warning:
             logger.warning(
                 f"Result AI | Object {obj} is not JSON serializable, converting to JSON string: {obj} because of {e}"
@@ -135,30 +135,27 @@ def result_ai_wrapper_with_arguments(
             logger.error(f"Result AI | Error in pre hook API call for task {task_name}: {traceback.format_exc()}")
 
         response = wrapped(*args, **kwargs)
-        print(f"response: {response}")
         if pre_hook_success:
             try:
                 time_took = time.perf_counter() - start_time
                 logger.debug(f"Result AI | API call completed in {time_took:.3f}s for task: {task_name}")
 
-                instance_dict = {
-                    "is_cache": _instance.__dict__.get("cache", None) is not None,
-                    "model": _instance.__dict__.get("model_id", None),
-                    "max_tokens": _instance.__dict__.get("max_tokens", None),
-                    "temperature": _instance.__dict__.get("temperature", None)
-                }
+                instance_dict = {}
+                if hasattr(_instance, "__dict__"):
+                    instance_dict = {
+                        "is_cache": _instance.__dict__.get("cache") is not None,
+                        "model": _instance.__dict__.get("model_id"),
+                        "max_tokens": _instance.__dict__.get("max_tokens"),
+                        "temperature": _instance.__dict__.get("temperature"),
+                    }
 
-                print(f"_instance: {_instance}")
-                print(f"instance_dict: {instance_dict}")
                 arguments = inspect.signature(obj=wrapped).bind(*args, **kwargs).arguments
 
                 request_data = {
                     "llm_call_instance": instance_dict,
                     "llm_call_instance_type": str(type(_instance)),
                     "llm_call_instance_type_name": type(_instance).__name__,
-                    "llm_call_arguments": convert_to_json_serializable({
-                        "messages": arguments.get('messages', [])
-                    }, show_warning=False),
+                    "llm_call_arguments": convert_to_json_serializable(arguments, show_warning=False),
                 }
 
                 response_data = {
@@ -194,11 +191,12 @@ def result_ai_wrapper_with_arguments(
 
     return result_ai_wrapper
 
+
 class result_ai:
     def __init__(
         self, task_name: str, prompt_template: str, metadata: Optional[dict] = None, enabled: bool = True, **kwargs
     ):
-        self.enabled = enabled and os.getenv("RESULTAI_ENABLED", "true").lower() == "true"
+        self.enabled = enabled and os.getenv("RESULTAI_ENABLED", "true").lower() != "false"
         if not self.enabled:
             return
         self.task_name = task_name
