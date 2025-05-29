@@ -38,7 +38,7 @@ def queue_worker():
     This function runs in a separate thread and periodically checks the queue
     for new items. When items are found, they are batched and sent to the API.
     """
-    logger.info("Queue worker started")
+    logger.debug("Queue worker started")
     batch = []
     last_send_time = time.time()
     notified_no_api_key = False
